@@ -1,0 +1,38 @@
+name: Telegram News Bot
+
+on:
+  schedule:
+    - cron: '0 * * * *' # हर 1 घंटे में चलेगा
+  workflow_dispatch: # मैन्युअली चलाने का बटन भी देगा
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    permissions:          # <--- यह लाइन जोड़ें
+      contents: write     # <--- और यह लाइन जोड़ें
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Run Bot Script
+      env:
+        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      run: node bot.js
+
+    - name: Save History
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add history.json
+        git commit -m "Update history.json" || exit 0
+        git push
